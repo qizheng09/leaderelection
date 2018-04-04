@@ -1,0 +1,6 @@
+package: github.com/qizheng09/leaderelection
+import:
+- package: github.com/coreos/etcd
+  version: release-3.3
+  subpackages:
+  - clientv3
