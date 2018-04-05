@@ -1,15 +1,16 @@
 package main
 
 import (
-	"github.com/spf13/viper"
 	"flag"
+	"github.com/spf13/viper"
 	log "github.com/inconshreveable/log15"
 	"github.com/qizheng09/leaderelection/pkg/etcdcli"
-	"github.com/qizheng09/leaderelection/pkg/leader"
+	"sync"
+	"github.com/qizheng09/leaderelection/pkg/service"
 )
 
-func main() {
 
+func main() {
 	// load config
 	configpath := flag.String("configpath", "", "use -configpath=<configpath>")
 	viper.SetConfigName("config")
@@ -31,6 +32,16 @@ func main() {
 
 	// TODO: serviceinfo is which node can be uniquely identified
 	serviceinfo := viper.GetString("serviceinfo")
+	// All services of the network
+	var services *sync.Map
+	err = service.InitServices(services, cli)
+	if err != nil {
+		return
+	}
+	go service.SetServicesWatcher(services, cli)
 
-	leader.GrabKey(serviceinfo, cli)
+	err = service.RegisterServices(serviceinfo, cli)
+	if err != nil {
+		log.Error("RegisterServices error!", "err", err.Error())
+	}
 }
